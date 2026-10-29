@@ -19,6 +19,10 @@
  */
 
 @theme inline {
+  --font-sans: 'Manrope', sans-serif;
+  --color-photo-overlay: var(--photo-overlay);
+  --color-photo-foreground: var(--photo-foreground);
+  --color-brand-highlight: var(--brand-highlight);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -62,14 +66,17 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0.5rem;
+  --photo-overlay: oklch(0.18 0.02 160 / 48%);
+  --photo-foreground: oklch(0.99 0 0);
+  --brand-highlight: oklch(0.8 0.14 155);
   --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
+  --foreground: oklch(0.24 0.01 160);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.129 0.042 264.695);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
+  --primary: oklch(0.43 0.095 162);
   --primary-foreground: oklch(0.984 0.003 247.858);
   --secondary: oklch(0.968 0.007 247.896);
   --secondary-foreground: oklch(0.208 0.042 265.755);
@@ -81,7 +88,7 @@
   --destructive-foreground: oklch(0.984 0.003 247.858);
   --border: oklch(0.929 0.013 255.508);
   --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
+  --ring: oklch(0.43 0.095 162);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -138,7 +145,14 @@
   }
 
   body {
+    font-family: 'Manrope', sans-serif;
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
 }
+
+.auth-input { width: 100%; height: 3rem; border: 1px solid var(--input); border-radius: var(--radius); background: var(--background); font-size: .875rem; padding-left: .875rem; padding-right: .875rem; outline: none; }
+.auth-input.pl-11 { padding-left: 2.75rem; }
+.auth-input.pr-12 { padding-right: 3rem; }
+.auth-input:focus { border-color: var(--ring); box-shadow: 0 0 0 2px oklch(0.43 0.095 162 / 12%); }
+.auth-input::placeholder { color: var(--muted-foreground); }
