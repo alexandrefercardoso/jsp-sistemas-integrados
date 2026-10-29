@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.jsp_create_profile() FROM anon, authenticated;
