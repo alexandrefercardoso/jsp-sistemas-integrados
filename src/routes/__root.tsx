@@ -8,7 +8,11 @@ import {
   Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import type { User } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { AuthContext } from '@/components/auth-context';
+import { isRecoveryHash } from '@/lib/auth-rules';
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -88,6 +92,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
+      { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap' },
       {
         rel: "stylesheet",
         href: appCss,
@@ -103,7 +108,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <head>
         <HeadContent />
       </head>
@@ -117,11 +122,31 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [recovery, setRecovery] = useState(false);
+  const finishRecovery = () => { sessionStorage.removeItem('jsp-recovery'); setRecovery(false); };
+  useEffect(() => {
+    let active = true;
+    if (isRecoveryHash(window.location.hash)) { sessionStorage.setItem('jsp-recovery', '1'); setRecovery(true); }
+    else setRecovery(sessionStorage.getItem('jsp-recovery') === '1');
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') { sessionStorage.setItem('jsp-recovery', '1'); setRecovery(true); }
+      if (event !== 'SIGNED_IN' && event !== 'SIGNED_OUT' && event !== 'USER_UPDATED' && event !== 'PASSWORD_RECOVERY') return;
+      if (event === 'SIGNED_OUT') { setUser(null); sessionStorage.removeItem('jsp-recovery'); setRecovery(false); }
+      else void supabase.auth.getUser().then(({ data }) => { if (active) setUser(data.user); });
+      void router.invalidate();
+      if (event !== 'SIGNED_OUT') void queryClient.invalidateQueries();
+    });
+    void supabase.auth.getUser().then(({ data }) => { if (active) { setUser(data.user); setLoading(false); } }).catch(() => { if (active) setLoading(false); });
+    return () => { active = false; subscription.unsubscribe(); };
+  }, [router, queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <AuthContext.Provider value={{ user, loading, recovery, finishRecovery }}><Outlet /></AuthContext.Provider>
     </QueryClientProvider>
   );
 }
